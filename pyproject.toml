@@ -10,15 +10,15 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi[standard]>=0.136.1",
-    "uvicorn>=0.46.0",
+    "uvicorn>=0.49.0",
     "httpx[socks]>=0.28.1",
-    "pydantic>=2.13.3",
+    "pydantic>=2.13.4",
     "python-dotenv>=1.2.2",
-    "tiktoken>=0.7.0",
-    "pydantic-settings>=2.14.0",
-    "openai>=2.34.0",
+    "tiktoken>=0.13.0",
+    "pydantic-settings>=2.14.1",
+    "openai>=2.42.0",
     "loguru>=0.7.0",
-    "aiohttp>=3.13.4",
+    "aiohttp>=3.14.1",
 ]
 
 [project.urls]
@@ -42,11 +42,11 @@ packages = ["api", "cli", "config", "core", "providers"]
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0.3",
-    "pytest-asyncio>=1.3.0",
+    "pytest>=9.1.0",
+    "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
-    "ty>=0.0.34",
-    "ruff>=0.15.12",
+    "ty>=0.0.49",
+    "ruff>=0.15.17",
     "pytest-xdist>=3.8.0",
 ]
 
