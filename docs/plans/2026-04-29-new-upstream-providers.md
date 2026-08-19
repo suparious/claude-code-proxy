@@ -54,7 +54,9 @@ Minimal provider (c.f. LM Studio — 16 lines):
 ```python
 class NewProvider(AnthropicMessagesTransport):
     def __init__(self, config: ProviderConfig):
-        super().__init__(config, provider_name="NEWPROV", default_base_url=NEWPROV_DEFAULT_BASE)
+        super().__init__(
+            config, provider_name="NEWPROV", default_base_url=NEWPROV_DEFAULT_BASE
+        )
 
     def _request_headers(self) -> dict[str, str]:
         return {
@@ -119,10 +121,12 @@ friendliai_key_usage_limit: int = Field(
 # Per-provider proxy
 friendliai_proxy: str = Field(default="", validation_alias="FRIENDLIAI_PROXY")
 
+
 # Add to field_validator for api_keys tuple
 @field_validator("friendliai_api_keys", mode="before")
 @classmethod
 def parse_api_key_tuple(cls, v: Any) -> Any: ...
+
 
 # Add to field_validator for key_usage_limit
 @field_validator("friendliai_key_usage_limit")
@@ -147,6 +151,7 @@ __all__ = ("FriendliAIProvider",)
 from providers.anthropic_messages import AnthropicMessagesTransport
 from providers.base import ProviderConfig
 from providers.defaults import FRIENDLIAI_DEFAULT_BASE
+
 
 class FriendliAIProvider(AnthropicMessagesTransport):
     """FriendliAI using native Anthropic Messages API (serverless/dedicated)."""
@@ -240,7 +245,9 @@ fireworks_api_key: str = Field(default="", validation_alias="FIREWORKS_API_KEY")
 fireworks_api_keys: Annotated[tuple[str, ...], NoDecode] = Field(
     default=(), validation_alias="FIREWORKS_API_KEYS"
 )
-fireworks_key_usage_limit: int = Field(default=0, validation_alias="FIREWORKS_KEY_USAGE_LIMIT")
+fireworks_key_usage_limit: int = Field(
+    default=0, validation_alias="FIREWORKS_KEY_USAGE_LIMIT"
+)
 fireworks_proxy: str = Field(default="", validation_alias="FIREWORKS_PROXY")
 ```
 
@@ -257,6 +264,7 @@ Same pattern as FriendliAI — minimal AnthropicMessagesTransport subclass with 
 ```python
 def _create_fireworks(config: ProviderConfig, _settings: Settings) -> BaseProvider:
     from providers.fireworks import FireworksProvider
+
     return FireworksProvider(config)
 ```
 
@@ -475,7 +483,12 @@ Request builder pattern (c.f. NvidiaNimProvider):
 ```python
 class NewProvider(OpenAIChatTransport):
     def __init__(self, config, *, provider_settings=None):
-        super().__init__(config, provider_name="NEWPROV", base_url=NEWPROV_BASE, api_key=config.api_key)
+        super().__init__(
+            config,
+            provider_name="NEWPROV",
+            base_url=NEWPROV_BASE,
+            api_key=config.api_key,
+        )
         self._settings = provider_settings
 
     def _build_request_body(self, request, thinking_enabled=None) -> dict:
@@ -552,46 +565,48 @@ def build_request_body(request: Any, *, thinking_enabled: bool) -> dict:
     """Build OpenAI chat completions body from Anthropic Messages request."""
     from core.anthropic.native_messages_request import dump_raw_messages_request
     from providers.exceptions import InvalidRequestError
-    
+
     data = dump_raw_messages_request(request)
-    
+
     # Validate unsupported types
     _validate_no_unsupported_blocks(data)
-    
+
     body: dict[str, Any] = {
         "model": data.get("model", ""),
         "messages": _convert_messages(data),
         "stream": True,
     }
-    
+
     # System prompt as system message (not top-level param — Groq accepts either)
     system = data.get("system")
     if system:
-        body["messages"].insert(0, {"role": "system", "content": _flatten_system(system)})
-    
+        body["messages"].insert(
+            0, {"role": "system", "content": _flatten_system(system)}
+        )
+
     # Max tokens
     if max_tokens := data.get("max_tokens"):
         body["max_completion_tokens"] = max_tokens
-    
+
     # Tools
     if tools := data.get("tools"):
         body["tools"] = _convert_tools(tools)
         if tool_choice := data.get("tool_choice"):
             body["tool_choice"] = _convert_tool_choice(tool_choice)
-    
+
     # Stop sequences
     if stops := data.get("stop_sequences"):
         if len(stops) == 1:
             body["stop"] = stops[0]
         else:
             body["stop"] = stops
-    
+
     # Temperature / top_p
     if "temperature" in data:
         body["temperature"] = data["temperature"]
     if "top_p" in data:
         body["top_p"] = data["top_p"]
-    
+
     return body
 ```
 
@@ -601,11 +616,13 @@ def build_request_body(request: Any, *, thinking_enabled: bool) -> dict:
 
 ```python
 """Groq provider implementation (OpenAI-compatible chat completions)."""
+
 from providers.base import ProviderConfig
 from providers.defaults import GROQ_DEFAULT_BASE
 from providers.openai_compat import OpenAIChatTransport
 
 from .request import build_request_body
+
 
 class GroqProvider(OpenAIChatTransport):
     """Groq using OpenAI-compatible /chat/completions endpoint."""
@@ -632,6 +649,7 @@ class GroqProvider(OpenAIChatTransport):
 ```python
 def _create_groq(config: ProviderConfig, _settings: Settings) -> BaseProvider:
     from providers.groq import GroqProvider
+
     return GroqProvider(config)
 ```
 
@@ -675,7 +693,9 @@ Unique Cerebras considerations in request builder:
 ```python
 # Pass through reasoning_effort if the model supports it
 if thinking_enabled:
-    body["reasoning_effort"] = "medium"  # or extract from request thinking.budget_tokens
+    body["reasoning_effort"] = (
+        "medium"  # or extract from request thinking.budget_tokens
+    )
 
 # Non-standard params go in extra_body
 extra_body = {}
@@ -713,15 +733,18 @@ After each provider is implemented, add a live smoke test:
 
 ```python
 @pytest.mark.live
-@pytest.mark.parametrize("provider_info", [
-    ("friendliai", "friendliai/meta-llama/Llama-4-Maverick-17B-128E-Instruct"),
-    ("fireworks", "fireworks/accounts/fireworks/models/llama-v4-maverick-17b"),
-    ("groq", "groq/llama-4-maverick-17b-128e"),
-    ("cerebras", "cerebras/llama-4-maverick-17b"),
-    ("together", "together/meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8"),
-    ("vllm", "vllm/meta-llama/Llama-4-Maverick-17B-128E-Instruct"),
-    ("cliproxyapi", "cliproxyapi/claude-sonnet-4-5-20250929"),
-])
+@pytest.mark.parametrize(
+    "provider_info",
+    [
+        ("friendliai", "friendliai/meta-llama/Llama-4-Maverick-17B-128E-Instruct"),
+        ("fireworks", "fireworks/accounts/fireworks/models/llama-v4-maverick-17b"),
+        ("groq", "groq/llama-4-maverick-17b-128e"),
+        ("cerebras", "cerebras/llama-4-maverick-17b"),
+        ("together", "together/meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8"),
+        ("vllm", "vllm/meta-llama/Llama-4-Maverick-17B-128E-Instruct"),
+        ("cliproxyapi", "cliproxyapi/claude-sonnet-4-5-20250929"),
+    ],
+)
 def test_provider_health_check(provider_info, settings):
     provider_id, model_ref = provider_info
     # Skip if API key not configured
