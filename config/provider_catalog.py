@@ -29,6 +29,10 @@ GROQ_DEFAULT_BASE = "https://api.groq.com/openai/v1"
 CEREBRAS_DEFAULT_BASE = "https://api.cerebras.ai/v1"
 TOGETHER_DEFAULT_BASE = "https://api.together.xyz/v1"
 KIMI_DEFAULT_BASE = "https://api.moonshot.ai/v1"
+# SAP Hyperspace AI proxy (HAI). Exposes a native Anthropic Messages API at
+# ``/anthropic/v1`` backed by the internal proxy, so Claude Code can route to
+# Claude, GPT, and Gemini model families through a single approved endpoint.
+HYPERSPACE_DEFAULT_BASE = "http://localhost:6655/anthropic/v1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,6 +220,19 @@ PROVIDER_CATALOG: dict[str, ProviderDescriptor] = {
         default_base_url=KIMI_DEFAULT_BASE,
         proxy_attr="kimi_proxy",
         capabilities=("chat", "streaming", "tools", "thinking", "rate_limit"),
+    ),
+    "hyperspace": ProviderDescriptor(
+        provider_id="hyperspace",
+        transport_type="anthropic_messages",
+        credential_env="HYPERSPACE_API_KEY",
+        credential_url="https://hyperspace.only.sap",
+        credential_attr="hyperspace_api_key",
+        credential_list_attr="hyperspace_api_keys",
+        key_usage_limit_attr="hyperspace_key_usage_limit",
+        default_base_url=HYPERSPACE_DEFAULT_BASE,
+        base_url_attr="hyperspace_base_url",
+        proxy_attr="hyperspace_proxy",
+        capabilities=("chat", "streaming", "tools", "thinking", "native_anthropic"),
     ),
 }
 
