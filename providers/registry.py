@@ -103,6 +103,12 @@ def _create_kimi(config: ProviderConfig, _settings: Settings) -> BaseProvider:
     return KimiProvider(config)
 
 
+def _create_hyperspace(config: ProviderConfig, _settings: Settings) -> BaseProvider:
+    from providers.hyperspace import HyperspaceProvider
+
+    return HyperspaceProvider(config)
+
+
 PROVIDER_FACTORIES: dict[str, ProviderFactory] = {
     "nvidia_nim": _create_nvidia_nim,
     "open_router": _create_open_router,
@@ -118,6 +124,7 @@ PROVIDER_FACTORIES: dict[str, ProviderFactory] = {
     "cerebras": _create_cerebras,
     "together": _create_together,
     "kimi": _create_kimi,
+    "hyperspace": _create_hyperspace,
 }
 
 if set(PROVIDER_DESCRIPTORS) != set(SUPPORTED_PROVIDER_IDS) or set(

@@ -155,6 +155,21 @@ class Settings(BaseSettings):
         default=0, validation_alias="FRIENDLIAI_KEY_USAGE_LIMIT"
     )
 
+    # ==================== SAP Hyperspace (HAI) Config ====================
+    # Native Anthropic Messages proxy (default local HAI relay). Point
+    # HYPERSPACE_BASE_URL at your relay's ``/anthropic/v1`` endpoint.
+    hyperspace_base_url: str = Field(
+        default="http://localhost:6655/anthropic/v1",
+        validation_alias="HYPERSPACE_BASE_URL",
+    )
+    hyperspace_api_key: str = Field(default="", validation_alias="HYPERSPACE_API_KEY")
+    hyperspace_api_keys: Annotated[tuple[str, ...], NoDecode] = Field(
+        default=(), validation_alias="HYPERSPACE_API_KEYS"
+    )
+    hyperspace_key_usage_limit: int = Field(
+        default=0, validation_alias="HYPERSPACE_KEY_USAGE_LIMIT"
+    )
+
     # ==================== Model ====================
     # All Claude model requests are mapped to this single model (fallback)
     # Format: provider_type/model/name
@@ -172,6 +187,7 @@ class Settings(BaseSettings):
     lmstudio_proxy: str = Field(default="", validation_alias="LMSTUDIO_PROXY")
     llamacpp_proxy: str = Field(default="", validation_alias="LLAMACPP_PROXY")
     friendliai_proxy: str = Field(default="", validation_alias="FRIENDLIAI_PROXY")
+    hyperspace_proxy: str = Field(default="", validation_alias="HYPERSPACE_PROXY")
 
     # ==================== Fireworks AI Config ====================
     fireworks_api_key: str = Field(default="", validation_alias="FIREWORKS_API_KEY")
@@ -372,6 +388,7 @@ class Settings(BaseSettings):
         "cerebras_api_keys",
         "together_api_keys",
         "kimi_api_keys",
+        "hyperspace_api_keys",
         mode="before",
     )
     @classmethod
@@ -396,6 +413,7 @@ class Settings(BaseSettings):
         "cerebras_key_usage_limit",
         "together_key_usage_limit",
         "kimi_key_usage_limit",
+        "hyperspace_key_usage_limit",
     )
     @classmethod
     def validate_key_usage_limit(cls, v: int) -> int:
